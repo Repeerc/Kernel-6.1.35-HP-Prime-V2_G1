@@ -7,6 +7,7 @@
  * Samsung S3C2410/S3C2440/S3C2412 NAND driver
 */
 
+#include "linux/printk.h"
 #define pr_fmt(fmt) "nand-s3c2410: " fmt
 
 #ifdef CONFIG_MTD_NAND_S3C2410_DEBUG
@@ -65,6 +66,7 @@
 #define S3C2440_NFCONT_ENABLE		(1<<0)
 #define S3C2440_NFSTAT_READY		(1<<0)
 #define S3C2412_NFCONF_NANDBOOT		(1<<31)
+#define S3C2412_NFCONT_MAIN_ECC_LOCK		(1<<7)
 #define S3C2412_NFCONT_INIT_MAIN_ECC	(1<<5)
 #define S3C2412_NFCONT_nFCE0		(1<<1)
 #define S3C2412_NFSTAT_READY		(1<<0)
@@ -78,7 +80,7 @@ static int s3c2410_ooblayout_ecc(struct mtd_info *mtd, int section,
 		return -ERANGE;
 
 	oobregion->offset = 0;
-	oobregion->length = 3;
+	oobregion->length = 4;
 
 	return 0;
 }
@@ -89,8 +91,8 @@ static int s3c2410_ooblayout_free(struct mtd_info *mtd, int section,
 	if (section)
 		return -ERANGE;
 
-	oobregion->offset = 8;
-	oobregion->length = 8;
+	oobregion->offset = 4;
+	oobregion->length = 2;
 
 	return 0;
 }
@@ -602,6 +604,7 @@ static void s3c2412_nand_enable_hwecc(struct nand_chip *chip, int mode)
 
 	info = s3c2410_nand_mtd_toinfo(nand_to_mtd(chip));
 	ctrl = readl(info->regs + S3C2440_NFCONT);
+    //ctrl &= ~S3C2412_NFCONT_MAIN_ECC_LOCK;           
 	writel(ctrl | S3C2412_NFCONT_INIT_MAIN_ECC,
 	       info->regs + S3C2440_NFCONT);
 }
@@ -637,12 +640,18 @@ static int s3c2412_nand_calculate_ecc(struct nand_chip *chip,
 	struct mtd_info *mtd = nand_to_mtd(chip);
 	struct s3c2410_nand_info *info = s3c2410_nand_mtd_toinfo(mtd);
 	unsigned long ecc = readl(info->regs + S3C2412_NFMECC0);
+	
+	uint32_t ctrl;
+    ctrl = readl(info->regs + S3C2440_NFCONT);
+    //ctrl |= S3C2412_NFCONT_MAIN_ECC_LOCK;                         
+    writel(ctrl, info->regs + S3C2440_NFCONT); 
 
 	ecc_code[0] = ecc;
 	ecc_code[1] = ecc >> 8;
 	ecc_code[2] = ecc >> 16;
+	ecc_code[3] = ecc >> 24; 
 
-	pr_debug("%s: returning ecc %*phN\n", __func__, 3, ecc_code);
+	pr_debug("%s: returning ecc %*phN\n", __func__, 4, ecc_code);
 
 	return 0;
 }
@@ -979,7 +988,7 @@ static int s3c2410_nand_attach_chip(struct nand_chip *chip)
 			chip->ecc.bytes	    = 3;
 		} else {
 			chip->ecc.size	    = 512;
-			chip->ecc.bytes	    = 3;
+			chip->ecc.bytes	    = 4;
 			mtd_set_ooblayout(nand_to_mtd(chip),
 					  &s3c2410_ooblayout_ops);
 		}

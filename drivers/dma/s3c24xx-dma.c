@@ -1159,7 +1159,7 @@ static struct soc_data soc_s3c2412 = {
 static struct soc_data soc_s3c2443 = {
 	.stride = 0x100,
 	.has_reqsel = true,
-	.has_clocks = true,
+	.has_clocks = false,
 };
 
 static const struct platform_device_id s3c24xx_dma_driver_ids[] = {

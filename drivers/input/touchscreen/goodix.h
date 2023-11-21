@@ -73,9 +73,16 @@ struct goodix_chip_data {
 	void (*calc_config_checksum)(struct goodix_ts_data *ts);
 };
 
+struct goodix_ts_platform_data {
+	int	pin_int;
+	int	pin_rst;
+	int	multitouch;
+};
+
 struct goodix_ts_data {
 	struct i2c_client *client;
 	struct input_dev *input_dev;
+	struct goodix_ts_platform_data pdat;
 	struct input_dev *input_pen;
 	const struct goodix_chip_data *chip;
 	const char *firmware_name;
@@ -84,8 +91,8 @@ struct goodix_ts_data {
 	unsigned int int_trigger_type;
 	struct regulator *avdd28;
 	struct regulator *vddio;
-	struct gpio_desc *gpiod_int;
-	struct gpio_desc *gpiod_rst;
+	int gpiod_int;
+	int gpiod_rst;
 	int gpio_count;
 	int gpio_int_idx;
 	enum gpiod_flags gpiod_rst_flags;

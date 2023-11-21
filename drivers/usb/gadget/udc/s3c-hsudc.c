@@ -1025,7 +1025,6 @@ static irqreturn_t s3c_hsudc_irq(int irq, void *_dev)
 	u32 ep_idx;
 
 	spin_lock(&hsudc->lock);
-
 	sys_status = readl(hsudc->regs + S3C_SSR);
 	ep_intr = readl(hsudc->regs + S3C_EIR) & 0x3FF;
 
@@ -1140,7 +1139,7 @@ static int s3c_hsudc_start(struct usb_gadget *gadget,
 	s3c_hsudc_reconfig(hsudc);
 
 	pm_runtime_get_sync(hsudc->dev);
-
+	printk("s3c_hsudc_start: phy_init\r\n");
 	if (hsudc->pd->phy_init)
 		hsudc->pd->phy_init();
 	if (hsudc->pd->gpio_init)
@@ -1280,7 +1279,9 @@ static int s3c_hsudc_probe(struct platform_device *pdev)
 		ret = PTR_ERR(hsudc->uclk);
 		goto err_res;
 	}
-	clk_enable(hsudc->uclk);
+	//clk_enable(hsudc->uclk);
+	ret = clk_prepare_enable(hsudc->uclk);
+	printk("s3c-hsudc: clk_prepare_enable:%d\r\n",ret);
 
 	local_irq_disable();
 
@@ -1288,6 +1289,7 @@ static int s3c_hsudc_probe(struct platform_device *pdev)
 	local_irq_enable();
 
 	ret = usb_add_gadget_udc(&pdev->dev, &hsudc->gadget);
+	printk("s3c-hsudc: usb_add_gadget_udc:%d\r\n",ret);
 	if (ret)
 		goto err_add_udc;
 

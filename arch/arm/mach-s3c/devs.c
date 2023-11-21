@@ -152,7 +152,7 @@ static struct resource s3c_fb_resource[] = {
 };
 
 struct platform_device s3c_device_fb = {
-	.name		= "s3c-fb",
+	.name		= "s3c2443-fb",
 	.id		= -1,
 	.num_resources	= ARRAY_SIZE(s3c_fb_resource),
 	.resource	= s3c_fb_resource,
@@ -658,7 +658,7 @@ static struct resource s3c_nand_resource[] = {
 };
 
 struct platform_device s3c_device_nand = {
-	.name		= "s3c2410-nand",
+	.name		= "s3c2412-nand",
 	.id		= -1,
 	.num_resources	= ARRAY_SIZE(s3c_nand_resource),
 	.resource	= s3c_nand_resource,
@@ -1066,11 +1066,73 @@ struct platform_device s3c_device_usb_hsudc = {
 	},
 };
 
+
+
+static   void s3c_hsudc_init_phy(void)
+{
+	u32 cfg;
+
+	//printk("<s3c_hsudc_init_phy>\r\n");
+
+	//cfg = readl(S3C2443_HCLKCON ) ;
+	//cfg |= S3C2443_HCLKCON_USBD;
+	//writel(cfg, S3C2443_HCLKCON);
+//
+//
+    cfg = readl(S3C2443_PWRCFG) | S3C2443_PWRCFG_USBPHY;
+    writel(cfg, S3C2443_PWRCFG);
+    
+    cfg = readl(S3C2443_URSTCON);
+    cfg |= (S3C2443_URSTCON_FUNCRST | S3C2443_URSTCON_PHYRST);
+    writel(cfg, S3C2443_URSTCON);
+    mdelay(1);
+    
+    cfg = readl(S3C2443_URSTCON);
+    cfg &= ~(S3C2443_URSTCON_FUNCRST | S3C2443_URSTCON_PHYRST);
+    writel(cfg, S3C2443_URSTCON);
+    
+    //cfg = readl(S3C2443_PHYCTRL);
+    //cfg &= ~(S3C2443_PHYCTRL_CLKSEL | S3C2443_PHYCTRL_DSPORT);
+    //cfg |= (S3C2443_PHYCTRL_EXTCLK | S3C2443_PHYCTRL_PLLSEL);
+    //writel(cfg, S3C2443_PHYCTRL);
+	writel(0x12, S3C2443_PHYCTRL);
+    
+    //cfg = readl(S3C2443_PHYPWR);
+    //cfg &= ~(S3C2443_PHYPWR_FSUSPEND | S3C2443_PHYPWR_PLL_PWRDN |
+    //	S3C2443_PHYPWR_XO_ON | S3C2443_PHYPWR_PLL_REFCLK |
+    //	S3C2443_PHYPWR_ANALOG_PD);
+    //cfg |= S3C2443_PHYPWR_COMMON_ON;
+    //writel(cfg, S3C2443_PHYPWR);
+    writel(0x30, S3C2443_PHYPWR);
+
+    
+    cfg = readl(S3C2443_UCLKCON);
+    cfg |= (S3C2443_UCLKCON_DETECT_VBUS | S3C2443_UCLKCON_FUNC_CLKEN |
+    	S3C2443_UCLKCON_TCLKEN);
+    writel(cfg, S3C2443_UCLKCON);
+
+     
+}
+
+static   void s3c_hsudc_uninit_phy(void)
+{
+	u32 cfg;
+
+	cfg = readl(S3C2443_PWRCFG) & ~S3C2443_PWRCFG_USBPHY;
+	writel(cfg, S3C2443_PWRCFG);
+
+	writel(S3C2443_PHYPWR_FSUSPEND, S3C2443_PHYPWR);
+
+	cfg = readl(S3C2443_UCLKCON) & ~S3C2443_UCLKCON_FUNC_CLKEN;
+	writel(cfg, S3C2443_UCLKCON);
+}
+
+
 void __init s3c24xx_hsudc_set_platdata(struct s3c24xx_hsudc_platdata *pd)
 {
-	s3c_set_platdata(pd, sizeof(*pd), &s3c_device_usb_hsudc);
 	pd->phy_init = s3c_hsudc_init_phy;
 	pd->phy_uninit = s3c_hsudc_uninit_phy;
+	s3c_set_platdata(pd, sizeof(*pd), &s3c_device_usb_hsudc);
 }
 #endif /* CONFIG_PLAT_S3C24XX */
 

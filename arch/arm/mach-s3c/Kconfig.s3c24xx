@@ -389,6 +389,16 @@ config S3C2416_SETUP_SDHCI_GPIO
 
 comment "S3C2416 Boards"
 
+config MACH_HPPRIMEV2
+	bool "HPPRIMEV2"
+	select S3C_DEV_FB
+	select S3C_DEV_HSMMC
+	select S3C_DEV_HSMMC1
+	select S3C_DEV_NAND
+	select S3C_DEV_USB_HOST
+	help
+	  Say Y here if you are using a HP PRIME V2
+	  
 config MACH_SMDK2416
 	bool "SMDK2416"
 	select S3C2416_SETUP_SDHCI

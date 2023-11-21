@@ -1308,22 +1308,27 @@ static void s3c_fb_set_rgb_timing(struct s3c_fb *sfb)
 
 	if (sfb->variant.is_2443)
 		data |= (1 << 5);
+	
+	printk("VIDCON0 = %08x\r\n", data);
 	writel(data, regs + VIDCON0);
 
 	data = VIDTCON0_VBPD(vmode->upper_margin - 1) |
 	       VIDTCON0_VFPD(vmode->lower_margin - 1) |
 	       VIDTCON0_VSPW(vmode->vsync_len - 1);
+	printk("VIDTCON0 = %08x\r\n", data);
 	writel(data, regs + sfb->variant.vidtcon);
 
 	data = VIDTCON1_HBPD(vmode->left_margin - 1) |
 	       VIDTCON1_HFPD(vmode->right_margin - 1) |
 	       VIDTCON1_HSPW(vmode->hsync_len - 1);
+	printk("VIDTCON1 = %08x\r\n", data);
 	writel(data, regs + sfb->variant.vidtcon + 4);
 
 	data = VIDTCON2_LINEVAL(vmode->yres - 1) |
 	       VIDTCON2_HOZVAL(vmode->xres - 1) |
 	       VIDTCON2_LINEVAL_E(vmode->yres - 1) |
 	       VIDTCON2_HOZVAL_E(vmode->xres - 1);
+	printk("VIDTCON2 = %08x\r\n", data);
 	writel(data, regs + sfb->variant.vidtcon + 8);
 }
 
